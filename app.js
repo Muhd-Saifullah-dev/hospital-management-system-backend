@@ -2,14 +2,27 @@ const express = require('express');
 const globalMiddleware = require('./middlewares/globalMiddleware');
 const app = express();
 const ReqResInspector=require("express-req-res-inspector")
-// Middleware
+const rootRouter=require("./routes/root.routes")
+
 app.use(express.json());
 app.use(express.urlencoded({
     extended:true
 }))
-
+app.use("/api/v1",rootRouter)
+app.use(ReqResInspector()); 
 // add routes
 
+app.get("/health-check",(req,res)=>{
+    return res.status(200).json({
+        success:true,
+        data:null,
+        message:"server is running "
+    })
+})
 
+// Middleware
 app.use(globalMiddleware)
+
+
+
 module.exports = app;
