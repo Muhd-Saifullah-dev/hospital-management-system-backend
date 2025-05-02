@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser=require("cookie-parser")
 const globalMiddleware = require('./middlewares/globalMiddleware');
 const app = express();
 const ReqResInspector=require("express-req-res-inspector")
@@ -8,6 +9,7 @@ app.use(express.json());
 app.use(express.urlencoded({
     extended:true
 }))
+app.use(cookieParser())
 app.use("/api/v1",rootRouter)
 app.use(ReqResInspector()); 
 // add routes
