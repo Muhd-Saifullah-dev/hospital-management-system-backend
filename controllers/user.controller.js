@@ -4,44 +4,50 @@ const {okResponse }=require("../utils/Errorhandlers")
 const { CookieOption } = require("../constant")
 
 
-const patientRegister=async(req,res,next)=>{
-try {
-    const {firstName,lastName,email,password,phone,nic,dob,gender,role }=req.body
+const patientRegister = async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, password, phone, nic, dob, gender, role } = req.body;
     
-    let existinguser=await User.findOne({email})
-    if(existinguser){
-        throw new BadRequestError("user is already exist !")
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password || !phone || !nic || !dob || !gender) {
+      throw new BadRequestError("All required fields must be provided");
+    }
+    
+    let existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new BadRequestError("User already exists!");
     }
    
-   const newUser=await User.create({
-        firstName,
-        lastName,
-        email,
-        password,
-        phone,
-        nic,
-        dob,
-        gender,
-        role:role || "PATIENT" 
-    })
-    await newUser.save();
-    const AccessToken= newUser.generateAccessToken()
-    const RefreshToken= newUser.generateRefreshToken()
+   const newUser = await User.create({
+      firstName,
+      lastName,
+      email,
+      password, // Will be hashed by pre-save hook
+      phone,
+      nic,
+      dob,
+      gender,
+      role: role || "PATIENT"
+    });
     
-    await newUser.setRefreshToken(RefreshToken)
-
-
-    res.cookie("access_token",AccessToken,CookieOption.accessTokenOptions)
-    res.cookie("refresh_token",RefreshToken,CookieOption.RefreshTokenOptions)
+    const accessToken = newUser.generateAccessToken();
+    const refreshToken = newUser.generateRefreshToken();
     
-    okResponse(res,201,"user created successfully",newUser,AccessToken)
-} catch (error) {
-    console.log(`error in patient register :: ${error}`)
-    next(error)
-}
+    await newUser.setRefreshToken(refreshToken);
 
-}
-
+    res.cookie("access_token", accessToken, CookieOption.accessTokenOptions);
+    res.cookie("refresh_token", refreshToken, CookieOption.RefreshTokenOptions);
+    
+    // Remove password from response
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+    
+    okResponse(res, 201, "User created successfully", userResponse, accessToken);
+  } catch (error) {
+    console.error(`Error in patient register: ${error.message}`);
+    next(error);
+  }
+};
 
 const login=async(req,res,next)=>{
    try {

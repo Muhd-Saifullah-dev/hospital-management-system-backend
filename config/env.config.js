@@ -6,7 +6,9 @@ const path=require("path")
 dotenv.config({
     path:path.resolve(__dirname,"../.env")
 })
-
+console.log(process.env.TOKEN_SECRET_KEY)
+console.log(process.env.EXPIRE_DATE,)
+console.log(process.env.REFRESH_TOKEN_SECRET)
 module.exports={
     PORT:process.env.PORT || 3000,
     MONGO_URI:process.env.MONGO_URI,
