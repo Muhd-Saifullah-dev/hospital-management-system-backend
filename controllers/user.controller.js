@@ -2,7 +2,7 @@ const User=require("../models/user.model")
 const {BadRequestError,UnAuthorizedError }=require("../customError")
 const {okResponse }=require("../utils/Errorhandlers")
 const { CookieOption } = require("../constant")
-
+const {pagination}=require("../utils/pagination")
 
 const patientRegister = async (req, res, next) => {
   try {
@@ -30,9 +30,10 @@ const patientRegister = async (req, res, next) => {
     const accessToken = await newUser.generate_access_token();
    
     res.cookie("access_token", accessToken,CookieOption);
-
+    const userResponse=newUser.toObject()
+    delete userResponse.password
     
-    okResponse(res, 201, "User created successfully", newUser, accessToken);
+    okResponse(res, 201, "User created successfully", userResponse, accessToken);
   } catch (error) {
     console.error(`Error in patient register: ${error.message}`);
     next(error);
@@ -86,10 +87,10 @@ const addNewAdmin=async(req,res,next)=>{
     const { firstName, lastName,email,password,phone,nic,dob,gender}=req.body
      let admin=await User.findOne({email})
      if(admin){
-         throw new BadRequestError("Admin with this email already exists")
+         throw new BadRequestError(`${admin.role} Admin with this email already exists`)
      }
-     const newAdmin=User.create({
-         firstName,
+     const newAdmin=await User.create({
+    firstName,
      lastName,
      email,
      password,
@@ -99,7 +100,9 @@ const addNewAdmin=async(req,res,next)=>{
      gender,
      role:"ADMIN"
      })
-     okResponse(res,201,"new admin created successfully !",newAdmin)
+     const adminResponse=newAdmin.toObject()
+     delete adminResponse.password
+     okResponse(res,201,"new admin created successfully !",adminResponse)
    } catch (error) {
     console.log(`error in addNewAdmin function :: ${error}`)
     next(error)
@@ -108,7 +111,39 @@ const addNewAdmin=async(req,res,next)=>{
 
 
 const getAllDoctor=async(req,res,next)=>{
-    const doctor=await User.find({role:"DOCTOR"})
-    okResponse(r)
+ 
+try {
+    const {page,limit,skip }= pagination(req) 
+  
+    const doctors=await User.find({role:"DOCTOR"})
+    .skip(skip)
+    .limit(limit)
+     
+      const totalRecord=await User.countDocuments({role:"DOCTOR"})
+       if(!doctors || doctors.length===0){
+        throw new BadRequestError("no doctor found ")
+      }
+      const totalPage=Math.ceil(totalRecord/limit)
+  okResponse(res,201,"all doctor fetch successfully!",{doctors,pagination:{
+     page,
+      limit,
+      totalRecord,
+      totalPage,
+  }})
+} catch (error) {
+   console.log(`error in getAllDoctor :: ${error}`);
+    next(error);
 }
-module.exports={patientRegister,login,addNewAdmin,logout}
+}
+
+const getProfileme=async(req,res,next)=>{
+ try {
+   const user=await User.findById(req.user?.id)
+   okResponse(res,200,"get user detail successfully !!",user)
+ } catch (error) {
+  console.log(`error in get user detail :: ${error}`)
+  next(error)
+ }
+
+}
+module.exports={patientRegister,login,addNewAdmin,logout,getAllDoctor,getProfileme}

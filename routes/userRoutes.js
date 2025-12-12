@@ -1,10 +1,16 @@
 const express=require("express")
-const { patientRegister, login } = require("../controllers/user.controller")
+const { patientRegister, login,logout, addNewAdmin, getAllDoctor,getProfileme } = require("../controllers/user.controller")
 const userRoutes=express.Router()
 const PatientValidation=require("../validation/patient.validation") 
 const { validationMiddleware } = require("../middlewares/validation.middleware")
 const loginValidation=require("../validation/login.validation")
+const addNewAdminValidation = require("../validation/new-admin.validation")
+const { authenticated, verifyRole } = require("../middlewares/auth.middleware")
 
-userRoutes.post("/patient/register",PatientValidation,validationMiddleware,patientRegister)
+userRoutes.post("/register",PatientValidation,validationMiddleware,patientRegister)
 userRoutes.post("/login",loginValidation,validationMiddleware,login)
+userRoutes.get("/logout",logout)
+userRoutes.post("/new-admin",authenticated,verifyRole("ADMIN"),addNewAdminValidation,validationMiddleware,addNewAdmin)
+userRoutes.get("/doctors",authenticated,getAllDoctor)
+userRoutes.get("/profile/me",authenticated,getProfileme)
 module.exports=userRoutes

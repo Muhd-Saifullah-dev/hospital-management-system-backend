@@ -1,6 +1,6 @@
 const { body } = require("express-validator");
 const {validationError }=require("../customError")
-const PatientValidation=[
+const addNewAdminValidation=[
     body("email")
     .isEmail().withMessage("invalid email")
     .notEmpty().withMessage("email is required"),
@@ -32,21 +32,10 @@ const PatientValidation=[
     body("password")
         .notEmpty().withMessage("password is required")
         .isLength({min:8}).withMessage("password at least 8 character")
-        .trim()
-        ,
-     body("confirmPassword")
-    .notEmpty().withMessage("confirm password is required")
-    .custom((value,{req})=>{
-        if(value!==req.body.password){
-            throw new validationError("passwords do not match")
-        }
-        return true
-    }),
+        .trim(),
     body("gender")
     .notEmpty().withMessage("gender is  required")
     .isIn(["MALE","FEMALE"]).withMessage('Gender must be either MALE or FEMALE'),
-    body('role')
-    .notEmpty().withMessage('Role is required')
-    .isIn(['PATIENT','ADMIN', 'DOCTOR']).withMessage('Invalid role specified'),
+  
 ]
-module.exports=PatientValidation
+module.exports=addNewAdminValidation

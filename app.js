@@ -10,6 +10,7 @@ app.use(express.urlencoded({
     extended:true
 }))
 app.use(cookieParser())
+app.use(ReqResInspector()); 
 app.use("/api/v1",rootRouter)
 
 // add routes
@@ -22,7 +23,7 @@ app.get("/health-check",(req,res)=>{
     })
 })
 
-app.use(ReqResInspector()); 
+
 
 // Middleware
 app.use(globalMiddleware)
