@@ -12,7 +12,7 @@ const PatientValidation=[
     .trim(),
     body("nic")
     .notEmpty().withMessage("nic number is required")
-    .isLength({min:13,max:13}).withMessage("nic number must be equal to 11 number")
+    .isLength({min:13,max:13}).withMessage("nic number must be equal to 13 number")
     .trim(),
     body("phone")
     .notEmpty().withMessage("phone number is required")

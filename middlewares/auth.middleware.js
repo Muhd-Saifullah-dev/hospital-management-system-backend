@@ -36,16 +36,19 @@ const authenticated=async(req,res,next)=>{
 }
 
 
-const verifyAdmin=async(req,res,next)=>{
+const verifyRole=async(role)=>{
+    return (req,res,next)=>{
     try {
-        if(req.user?.role !== "ADMIN"){
+        if(req.user?.role !==role){
             throw new BadRequestError("Only admin can access this")
         }
         next()
        
     } catch (error) {
-        console.log(`error in verify admin :: ${error}`)
+        console.log(`error in role base control middleware :: ${error}`)
         next(error)
     }
+    }
 }
-module.exports={authenticated,verifyAdmin}
+
+module.exports={authenticated,verifyRole}

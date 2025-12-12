@@ -11,7 +11,7 @@ app.use(express.urlencoded({
 }))
 app.use(cookieParser())
 app.use("/api/v1",rootRouter)
-app.use(ReqResInspector()); 
+
 // add routes
 
 app.get("/health-check",(req,res)=>{
@@ -21,6 +21,8 @@ app.get("/health-check",(req,res)=>{
         message:"server is running "
     })
 })
+
+app.use(ReqResInspector()); 
 
 // Middleware
 app.use(globalMiddleware)

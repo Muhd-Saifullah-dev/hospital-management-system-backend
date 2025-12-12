@@ -8,10 +8,7 @@ const patientRegister = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone, nic, dob, gender, role } = req.body;
     
-    // Validate required fields
-    if (!firstName || !lastName || !email || !password || !phone || !nic || !dob || !gender) {
-      throw new BadRequestError("All required fields must be provided");
-    }
+
     
     let existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -30,19 +27,12 @@ const patientRegister = async (req, res, next) => {
       role: role || "PATIENT"
     });
     
-    const accessToken = newUser.generateAccessToken();
-    const refreshToken = newUser.generateRefreshToken();
-    
-    await newUser.setRefreshToken(refreshToken);
+    const accessToken = await newUser.generate_access_token();
+   
+    res.cookie("access_token", accessToken,CookieOption);
 
-    res.cookie("access_token", accessToken, CookieOption.accessTokenOptions);
-    res.cookie("refresh_token", refreshToken, CookieOption.RefreshTokenOptions);
     
-    // Remove password from response
-    const userResponse = newUser.toObject();
-    delete userResponse.password;
-    
-    okResponse(res, 201, "User created successfully", userResponse, accessToken);
+    okResponse(res, 201, "User created successfully", newUser, accessToken);
   } catch (error) {
     console.error(`Error in patient register: ${error.message}`);
     next(error);
@@ -51,28 +41,28 @@ const patientRegister = async (req, res, next) => {
 
 const login=async(req,res,next)=>{
    try {
-     const {email,password}=req.body;
-     let doesUser=await User.findOne({email}).select("+password +refreshToken")
+     const {email,password,role}=req.body;
+     let doesUser=await User.findOne({email}).select("+password")
      if(!doesUser){
          throw new BadRequestError("user is not exist")
      } 
-     const matchPassword=await doesUser.comparePassword(password)
+     const matchPassword=await doesUser.compare_password(password)
      if(!matchPassword){
          throw new UnAuthorizedError("invalid crediential")
      }
-   
-     const AccessToken= doesUser.generateAccessToken()
-     const RefreshToken= doesUser.generateRefreshToken()
-     await  doesUser.setRefreshToken(RefreshToken)
-     const user=await doesUser.save()
+     if(role !==doesUser.role){
+      throw new UnAuthorizedError("user with this role not found")
+     }
+     const AccessToken=await  doesUser.generate_access_token()
 
-     res.cookie("access_token",AccessToken,CookieOption.accessTokenOptions)
-     res.cookie("refresh_token",RefreshToken,CookieOption.RefreshTokenOptions)
 
-     okResponse(res,200,"user logged in successfully !!",user,{
-         accessToken:AccessToken,
-         refreshToken:RefreshToken
-     })
+     const userResponse=doesUser.toObject()
+     delete userResponse.password
+
+     res.cookie("access_token",AccessToken, CookieOption )
+
+
+     okResponse(res,200,"user logged in successfully !!",userResponse,AccessToken)
    } catch (error) {
         console.log(`error in login function :: ${error}`)
         next(error)
@@ -81,7 +71,7 @@ const login=async(req,res,next)=>{
 
 const logout=async(req,res,next)=>{
 try {
-    res.clearCookie("refresh_token")
+
     res.clearCookie("access_token")
     okResponse(res,200,"user logged out successfully")
 } catch (error) {
