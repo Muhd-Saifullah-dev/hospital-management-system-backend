@@ -1,7 +1,7 @@
 const Message=require("../models/message.model")
 const { okResponse } = require("../utils/Errorhandlers")
-
-
+const {pagination}=require("../utils/pagination")
+const {BadRequestError }=require("../customError")
 
 const SendMessage=async(req,res,next)=>{
     try {
@@ -20,6 +20,29 @@ const SendMessage=async(req,res,next)=>{
     }
 }
 
+const getAllMessage=async(req,res,next)=>{
+    try {
+        const {page,limit,skip}=await pagination(req)
+        const messages=await Message.find().skip(skip).limit(limit)
+        if(!messages || messages.length===0){
+            throw new BadRequestError("message not found")
+        }
+        const totalRecord=await Message.countDocuments();
+        const totalPage=Math.ceil(totalRecord/limit)
+
+        okResponse(res,200,"all messages fetch successfully",{messages,pagination:{
+            page,
+            skip,
+            limit,
+            totalRecord,
+            totalPage
+        }})
+    } catch (error) {
+        console.log(`error in get All msg `)
+        next(error)
+    }
+}
 module.exports={
-    SendMessage
+    SendMessage,
+    getAllMessage
 }

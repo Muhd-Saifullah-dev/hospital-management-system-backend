@@ -4,13 +4,14 @@ const SendMessageValidation = require("../validation/sendMessage.validation");
 const {
   validationMiddleware,
 } = require("../middlewares/validation.middleware");
-const { SendMessage } = require("../controllers/message.controller");
-
+const { SendMessage, getAllMessage } = require("../controllers/message.controller");
+const {authenticated,verifyRole}=require("../middlewares/auth.middleware")
 messageRoute.post(
   "/",
   SendMessageValidation,
   validationMiddleware,
   SendMessage
 );
+messageRoute.get("/",authenticated,verifyRole("ADMIN"),getAllMessage)
 
 module.exports = messageRoute;
